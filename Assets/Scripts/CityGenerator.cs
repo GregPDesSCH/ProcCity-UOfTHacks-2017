@@ -24,6 +24,7 @@ public class CityGenerator : MonoBehaviour
     // Properties of the city
     private GameObject[] cityGrid;
     private Transform[] cityGridPositions;
+    private int cityGridIndex = 0;
 
 	// Use this for initialization
 	void Start ()
@@ -41,7 +42,7 @@ public class CityGenerator : MonoBehaviour
         // Create the roads.
         createRoads();
         createBuildings();
-
+        applyScaling();
 
         // Get rid of all the references this object provides.
         cityGenerator = null;
@@ -71,7 +72,7 @@ public class CityGenerator : MonoBehaviour
 
     */
 
-    //
+    // Create a network of road on the city.
     void createRoads ()
     {
         /* 
@@ -111,7 +112,7 @@ public class CityGenerator : MonoBehaviour
                 positionVector = new Vector3(initialX, 0, initialZ + cityGridSquareSize * roadPieceIndex);
             else
                 positionVector = new Vector3(initialX + cityGridSquareSize * roadPieceIndex, 0, initialZ);
-            Instantiate(initialRoad, positionVector, Quaternion.identity);
+            cityGrid[cityGridIndex++] = Instantiate(initialRoad, positionVector, Quaternion.identity).gameObject;
         }
     }
 
@@ -183,7 +184,7 @@ public class CityGenerator : MonoBehaviour
             {
                 positionVector = new Vector3((numberOfColumns / 2) * -cityGridSquareSize + colIndex * cityGridSquareSize,
                     initialBuilding.localScale.y / 2, (numberOfRows / 2) * -cityGridSquareSize + cityGridSquareSize * rowIndex);
-                Instantiate(initialBuilding, positionVector, Quaternion.identity);
+                cityGrid[cityGridIndex++] = Instantiate(initialBuilding, positionVector, Quaternion.identity).gameObject;
             }
                 
         }
@@ -191,6 +192,24 @@ public class CityGenerator : MonoBehaviour
         // createStreets(numberOfRows - 2, true, (numberOfColumns / 2) * -cityGridSquareSize + colIndex * cityGridSquareSize,
                     //(numberOfRows / 2) * -cityGridSquareSize + cityGridSquareSize);
 
+    }
+
+    // This adjusts the scaling to all game objects added to the scene based on the grid square size from the inspector.
+    void applyScaling()
+    {
+        Vector3 buildingPosition;
+        for (int gridObjectIndex = 0; gridObjectIndex < cityGrid.Length; gridObjectIndex++)
+        {
+            cityGrid[gridObjectIndex].transform.localScale *= cityGridSquareSize;
+
+            // If the type of object we're dealing with is a building, adjust the position so that its bottom is at 0.0.
+            if (cityGrid[gridObjectIndex].layer == LayerMask.NameToLayer("Buildings"))
+            {
+                buildingPosition = cityGrid[gridObjectIndex].transform.position;
+                cityGrid[gridObjectIndex].transform.position = new Vector3(
+                    buildingPosition.x, buildingPosition.y * cityGridSquareSize, buildingPosition.z);
+            }
+        }
     }
 
 }
